@@ -1,0 +1,12 @@
+# インストーラーが作る Python の環境
+.venv/
+# キャラ（絵・下絵・モデル）。それぞれの人の作品で、道具の一部ではない
+projects/*
+!projects/.gitkeep
+# 作者の絵で学習した2倍拡大のネット。公開しない（なければ Lanczos で拡大する。自分の絵で学習するには
+# python vtmm/sr2x.py <プロジェクト> train）
+vtmm/sr_net.pt
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db

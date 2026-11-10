@@ -1,0 +1,9 @@
+# 改行コード: Windows のバッチは CRLF、それ以外は LF のまま
+*.bat      text eol=crlf
+*.command  text eol=lf
+*.py       text eol=lf
+*.js       text eol=lf
+*.html     text eol=lf
+*.md       text eol=lf
+*.png      binary
+*.pt       binary

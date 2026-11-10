@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VTModelMaker</title>
+<style>
+:root{--bg:#f6f5f8;--card:#fff;--ink:#222;--sub:#666;--line:#ddd;--accent:#6b4fd8;--accent2:#ece7ff;--ok:#1a8a4a;--warn:#b26a00;--bad:#c0392b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,"Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:10px 18px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+header h1{font-size:18px;margin:0;cursor:pointer}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+.chip{font-size:12px;padding:2px 8px;border-radius:10px;background:#eee;color:#444}
+.chip.ok{background:#e3f5ea;color:var(--ok)}.chip.warn{background:#fff3df;color:var(--warn)}.chip.bad{background:#fde8e6;color:var(--bad)}
+main{max-width:1180px;margin:0 auto;padding:16px 18px 220px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:14px}
+h2{font-size:17px;margin:0 0 10px}h3{font-size:15px;margin:14px 0 6px}
+button{font:inherit;padding:7px 14px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer}
+button.sec{background:#fff;color:var(--accent)}button.small{padding:3px 9px;font-size:13px}
+button:disabled{opacity:.45;cursor:default}
+input[type=text]{font:inherit;padding:6px 9px;border:1px solid var(--line);border-radius:7px;width:100%}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.muted{color:var(--sub);font-size:13px}
+.plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.pitem{border:1px solid var(--line);border-radius:9px;padding:10px;cursor:pointer;background:#fff}
+.pitem:hover{border-color:var(--accent)}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px}
+.tab{padding:6px 12px;border-radius:8px;background:#eee;cursor:pointer;font-size:14px}
+.tab.on{background:var(--accent);color:#fff}.tab.done::after{content:" ✓"}
+#lm{display:grid;grid-template-columns:1fr 300px;gap:14px}
+#cvwrap{position:relative;height:72vh;background:#2a2a30;border-radius:9px;overflow:hidden}
+#cv{display:block;width:100%;height:100%;cursor:crosshair}
+.lmlist{max-height:72vh;overflow:auto;border:1px solid var(--line);border-radius:9px}
+.lmrow{display:flex;align-items:center;gap:6px;padding:6px 9px;border-bottom:1px solid #f0f0f0;font-size:13px;cursor:pointer}
+.lmrow.cur{background:var(--accent2)}.lmrow .st{margin-left:auto;font-size:12px;color:var(--sub)}
+.lmrow.set .st{color:var(--ok)}
+.req{color:var(--bad);font-size:11px}
+#instr{font-size:16px;font-weight:600;margin:0 0 8px;min-height:24px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.req-card{border:1px solid var(--line);border-radius:9px;padding:10px;background:#fff}
+.req-card img{max-width:100%;max-height:220px;display:block;margin:6px auto;border:1px solid #eee}
+textarea{width:100%;height:110px;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;border:1px solid var(--line);border-radius:6px;padding:6px}
+.drop{border:2px dashed #bbb;border-radius:8px;padding:10px;text-align:center;color:var(--sub);font-size:13px;margin-top:6px}
+.drop.hover{border-color:var(--accent);color:var(--accent)}
+.badge{font-size:11px;padding:1px 6px;border-radius:8px;background:#fde8e6;color:var(--bad);margin-left:6px}
+.badge.opt{background:#eee;color:#555}
+img.preview{max-width:100%;border-radius:8px;border:1px solid var(--line);background:#222}
+#job{position:fixed;left:0;right:0;bottom:0;background:#1d1b24;color:#ddd;font:12px/1.45 ui-monospace,Menlo,Consolas,monospace;max-height:200px;z-index:6}
+#jobhead{display:flex;align-items:center;gap:10px;padding:6px 14px;background:#2b2836;color:#fff;font:13px -apple-system,"Hiragino Sans","Meiryo",sans-serif;cursor:pointer}
+#joblog{padding:6px 14px;overflow:auto;max-height:160px;white-space:pre-wrap}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.hidden{display:none!important}
+.note{background:#f4f1ff;border-left:4px solid var(--accent);padding:8px 12px;border-radius:6px;font-size:14px;margin:8px 0}
+.pockets{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px}
+.pockets label{border:1px solid var(--line);border-radius:6px;padding:4px 6px;font-size:13px;background:#fff;cursor:pointer}
+@media (max-width:900px){#lm{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1 onclick="goHome()">VTModelMaker <span class="muted">絵から VTube Studio のモデルへ</span></h1>
+  <div class="chips" id="envchips"></div>
+</header>
+<main>
+  <section id="home">
+    <div class="card">
+      <h2>新しいキャラを作る</h2>
+      <div class="row">
+        <div style="flex:1;min-width:200px"><div class="muted">名前（半角英数字。例: chara7）</div><input type="text" id="newname" placeholder="chara7"></div>
+        <div style="flex:2;min-width:240px"><div class="muted">キャラの絵（PNG / JPG。全身でも上半身でも可。背景は白か透明がおすすめ）</div><input type="file" id="newfile" accept="image/*"></div>
+        <button id="newbtn" onclick="newProject()">作る</button>
+      </div>
+      <div class="muted" id="newmsg"></div>
+    </div>
+    <div class="card">
+      <div class="row"><h2 style="margin:0">作りかけ・作ったキャラ</h2><button class="sec small" onclick="openFolder()">フォルダを開く</button></div>
+      <div class="plist" id="plist" style="margin-top:10px"></div>
+    </div>
+    <div class="card muted">
+      絵は、自分で描いたもの・使う権利のあるものだけを使ってください。隠れた部分（髪の下のおでこなど）は画像生成（AI）で描きます。作ったモデルを公開・販売するときは、販売先の決まり（AI使用の表示など）に従ってください。
+    </div>
+  </section>
+
+  <section id="proj" class="hidden">
+    <div class="card">
+      <div class="row"><h2 style="margin:0" id="ptitle"></h2><span class="muted" id="pdir"></span>
+        <button class="sec small" style="margin-left:auto" onclick="openFolder(P.name)">フォルダを開く</button></div>
+      <div class="tabs" id="tabs" style="margin-top:10px"></div>
+      <div id="step1" class="step">
+        <p id="instr"></p>
+        <div id="lm">
+          <div>
+            <div id="cvwrap"><canvas id="cv"></canvas></div>
+            <div class="row" style="margin-top:6px">
+              <button class="sec small" onclick="zoomBy(1.4)">＋ 拡大</button><button class="sec small" onclick="zoomBy(1/1.4)">－ 縮小</button>
+              <button class="sec small" onclick="fitView()">全体</button><button class="sec small" onclick="zoomFace()">顔に寄る</button>
+              <span class="muted">ドラッグで移動・ホイールで拡大。点を打つにはクリック。</span>
+            </div>
+          </div>
+          <div>
+            <div class="lmlist" id="lmlist"></div>
+            <div class="row" style="margin-top:8px">
+              <button class="sec small" id="aiptbtn" onclick="aiPoints()">AIに置いてもらう</button>
+              <button class="sec small" id="nonebtn" onclick="setNone()">これは「なし」</button>
+              <button onclick="savePoints()">保存</button><span class="muted" id="ptmsg"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="step2" class="step hidden">
+        <div class="note">絵の説明は、画像生成への指示に使います。空欄のままでも作れますが、書くと下絵が正確になります。日本語で書いてください（色や、向かって左右どちらかもはっきりと）。</div>
+        <div class="grid2" id="descfields"></div>
+        <div class="row" style="margin-top:10px">
+          <button class="sec" id="descai" onclick="describeAI()">AIに下書きしてもらう</button>
+          <button onclick="saveDescribe()">保存</button><span class="muted" id="descmsg"></span>
+        </div>
+      </div>
+      <div id="step3" class="step hidden">
+        <div class="note">絵からキャラを切り抜きます（数分）。そのあと、キャラに囲まれた背景の「穴」（腕と体のすき間など）を選びます。</div>
+        <button onclick="runStage('prep','prep','切り抜き')">切り抜きを作る</button>
+        <div id="prepres" class="hidden">
+          <h3>切り抜きの結果</h3>
+          <img class="preview" id="figlook" style="max-height:520px">
+          <h3>背景の穴の候補</h3>
+          <p class="muted">番号のついた白い部分のうち、<b>本当は背景（すき間）</b>のものにチェックを入れてください。絵の一部（白い服、白目など）はチェックしないでください。</p>
+          <img class="preview" id="pocketsimg" style="max-height:520px">
+          <img class="preview" id="pocketsheet" style="max-height:420px;margin-top:6px">
+          <div class="pockets" id="pocketlist" style="margin-top:8px"></div>
+          <div class="row" style="margin-top:8px">
+            <button onclick="savePockets()">チェックした穴を背景にして作り直す</button>
+            <button class="sec" onclick="showStep(4)">このままでよい（次へ）</button>
+          </div>
+        </div>
+      </div>
+      <div id="step4" class="step hidden">
+        <div class="note" id="platenote"></div>
+        <div class="row">
+          <button onclick="runStage('plates','plates','下絵')">下絵を作る（続きから）</button>
+          <span class="muted">下絵の作り方:</span>
+          <label><input type="radio" name="igm" value="codex" onchange="setImagegen(this.value)"> 自動（Codex）</label>
+          <label><input type="radio" name="igm" value="manual" onchange="setImagegen(this.value)"> 手作業（ChatGPT）</label>
+        </div>
+        <div id="platestatus" class="muted" style="margin-top:8px"></div>
+        <div class="row" style="margin-top:8px" id="skipallrow">
+          <button class="sec small" onclick="skipOptional()">「あるとよい」ものを全部使わない</button>
+        </div>
+        <div class="grid2" id="reqs" style="margin-top:10px"></div>
+      </div>
+      <div id="step5" class="step hidden">
+        <div class="note">パーツ分け・目・口・髪の束・揺れを組み立てて、モデルにします（10〜30分）。終わると確認の絵ができます。</div>
+        <button onclick="runStage('segment','preview','組み立て')">モデルを組み立てる</button>
+      </div>
+      <div id="step7" class="step hidden">
+        <div class="note">高品質モード：Codex CLI が見本の絵を描き、Claude Code（なければ Codex）が絵を見て確かめます。上から順に押してください。<span id="hqavail"></span></div>
+        <div class="row"><button class="sec small" onclick="hq('update')">このキャラの本体を最新にする</button><span class="muted">道具を新しくしたあとに。キャラ専用に直した所は残します。</span></div>
+        <h3>① 見本の向き絵を描く</h3>
+        <div class="row"><button onclick="hq('refs')">左右・上下を向いた見本を描く（4枚）</button><span class="muted">Codex が同じキャラを横向き・見上げ・見下ろしで描きます（数分）。</span></div>
+        <div class="row" id="hqrefs" style="margin-top:6px"></div>
+        <h3>② 首の回り方を見本に合わせる</h3>
+        <div class="row"><button onclick="hq('calibrate')">見本に合わせる</button><span class="muted">回り方・見上げ方を何通りか作って、見本と目の位置を比べ、見本と重なる値を書き込んで作り直します（5〜15分）。見本が大げさで届かないときは書き込みません。</span></div>
+        <div id="hqcal" style="margin-top:6px"></div>
+        <h3>③ 確認画像を作る</h3>
+        <div class="row"><button onclick="hq('qa')">確認画像を作る</button><button class="sec" onclick="hq('snapshot')">今の版を残す（あとで比べる用）</button></div>
+        <h3>④ AI に確認してもらう</h3>
+        <div class="row"><button onclick="hq('review')">崩れている所を探してもらう</button><span class="muted">確認画像を全部見て、直す所を日本語でまとめます（数分）。</span></div>
+        <div id="hqreview" class="card" style="white-space:pre-wrap;margin-top:8px;font-size:14px"></div>
+        <div id="hqimgs"></div>
+        <div class="note" style="margin-top:12px">直すところは、Claude Code に次のように頼むと、確認 → 直す → 比べる を繰り返して仕上げます。<br>
+          <code id="hqprompt"></code> <button class="sec small" onclick="copyText($('hqprompt').textContent)">コピー</button></div>
+      </div>
+      <div id="step6" class="step hidden">
+        <div class="row">
+          <button class="sec" onclick="motion(false)">首振りの動きを見る</button>
+          <button class="sec" onclick="motion(true)">まばたきを見る</button>
+          <button id="instbtn" onclick="installVTS()">VTube Studio に入れる</button>
+          <span class="muted">VTube Studio を<b>終了してから</b>押してください。</span>
+        </div>
+        <div id="previews" style="margin-top:12px"></div>
+        <div class="note" style="margin-top:12px">うまくいかない所は、Claude Code に「VTModelMaker の <span id="pname2"></span> を仕上げて」と頼むと、続きを直せます（スキルを入れてある場合）。</div>
+      </div>
+    </div>
+  </section>
+</main>
+<div id="job"><div id="jobhead" onclick="toggleLog()"><span id="jobspin" class="spin hidden"></span><span id="jobtitle">待機中</span><span class="muted" id="jobtime" style="color:#aaa"></span><span style="margin-left:auto;font-size:12px;color:#aaa">ログの表示／非表示</span></div><div id="joblog"></div></div>
+<script src="/static/app.js"></script>
+</body>
+</html>
